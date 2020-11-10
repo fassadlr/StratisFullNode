@@ -2,7 +2,7 @@
   "profiles": {
     "Stratis.CirrusPegD": {
       "commandName": "Project",
-      "commandLineArgs": "-mainchain"
+      "commandLineArgs": "-agentprefix=side_peg_0 -sidechain -regtest -bootstrap -counterchaindepositblock=1 -addressindex -txindex -datadir=C:\\Stratis\\StraxRegTest\\Data\\side_peg_0 -port=39010 -apiport=39011 -counterchainapiport=38011 -federationips=127.0.0.1:39010,127.0.0.1:39020 -redeemscript=\"2 03e217933fc748979d7dd67c063d21d517b82fe9bf1184946bc3e078b9237712b2 02bea73449db8f7d9b897b637b4bb53561011bb67b2889b40921dd3f68ca2dbe9d 2 OP_CHECKMULTISIG\" -publickey=03e217933fc748979d7dd67c063d21d517b82fe9bf1184946bc3e078b9237712b2 -whitebind=127.0.0.1 -addnode=127.0.0.1:39020"
     }
   }
 }

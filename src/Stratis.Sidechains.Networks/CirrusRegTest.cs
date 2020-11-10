@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using NBitcoin;
 using NBitcoin.DataEncoders;
 using NBitcoin.Protocol;
@@ -70,38 +69,32 @@ namespace Stratis.Sidechains.Networks
 
             this.Genesis = genesisBlock;
 
-            this.FederationMnemonics = new[] {
-                "ensure feel swift crucial bridge charge cloud tell hobby twenty people mandate",
-                "quiz sunset vote alley draw turkey hill scrap lumber game differ fiction",
-                "exchange rent bronze pole post hurry oppose drama eternal voice client state"
-            }.Select(m => new Mnemonic(m, Wordlist.English)).ToList();
-
-            this.FederationKeys = this.FederationMnemonics.Select(m => m.DeriveExtKey().PrivateKey).ToList();
-
-            var federationPubKeys = this.FederationKeys.Select(k => k.PubKey).ToList();
-
-            var genesisFederationMembers = new List<IFederationMember>(federationPubKeys.Count);
-            foreach (PubKey pubKey in federationPubKeys)
-                genesisFederationMembers.Add(new CollateralFederationMember(pubKey, true, new Money(0), null));
-
-            // Will replace the last multisig member.
-            var newFederationMemberMnemonics = new string[]
+            // Configure federation public keys (mining keys) used to sign blocks.
+            // Keep in mind that order in which keys are added to this list is important
+            // and should be the same for all nodes operating on this network.
+            var genesisFederationMembers = new List<IFederationMember>()
             {
-                "fat chalk grant major hair possible adjust talent magnet lobster retreat siren"
-            }.Select(m => new Mnemonic(m, Wordlist.English)).ToList();
+                new CollateralFederationMember(new PubKey("024211458479aae5503c71fa4974e7ab06484466a4a9bf96030a6faecedfef03b9"), true, new Money(50000_00000000), "qcFBAEGu823shPNtieFUJkarDLub2K8Bdu"),//Node1
+                new CollateralFederationMember(new PubKey("0396600eff42a9d52d3cfda29c7bc86d90cde12bbcfa8f54ae659e2d657e207f57"), true, new Money(50000_00000000), "qJtVWGNVEP2gJSarJ8gkowXDH3qjN8gN8a"),//Node2
+                new CollateralFederationMember(new PubKey("0292f705e336c3ab0015f86ed01ca52d6d5ef957e564dc3e0edc3e61f724e022c4"), true, new Money(0), null),                                             //Node3
+            };
 
-            var newFederationKeys = this.FederationMnemonics.Take(2).Concat(newFederationMemberMnemonics).Select(m => m.DeriveExtKey().PrivateKey).ToList();
-            var newFederationPubKeys = newFederationKeys.Select(k => k.PubKey).ToList();
-
-            // Mining keys!
-            this.StraxMiningMultisigMembers = newFederationPubKeys;
-
-            // Register only the new federation as we won't be doing anything with the old federation.
             this.Federations = new Federations();
+            var straxFederationTransactionSigningKeys = new List<PubKey>()
+            {
+               new PubKey("03e217933fc748979d7dd67c063d21d517b82fe9bf1184946bc3e078b9237712b2"),//Node1
+               new PubKey("02bea73449db8f7d9b897b637b4bb53561011bb67b2889b40921dd3f68ca2dbe9d"),//Node2
+            };
 
-            // Default transaction-signing keys!
-            // Use the new keys as the old keys should never be used by the new opcode.
-            this.Federations.RegisterFederation(new Federation(newFederationPubKeys.ToArray()));
+            // Register the new set of federation members. 
+            this.Federations.RegisterFederation(new Federation(straxFederationTransactionSigningKeys));
+
+            // Set the list of Strax Era mining keys.
+            this.StraxMiningMultisigMembers = new List<PubKey>()
+            {
+                new PubKey("024211458479aae5503c71fa4974e7ab06484466a4a9bf96030a6faecedfef03b9"),//Node1
+                new PubKey("0396600eff42a9d52d3cfda29c7bc86d90cde12bbcfa8f54ae659e2d657e207f57"),//Node2
+            };
 
             var consensusOptions = new PoAConsensusOptions(
                 maxBlockBaseSize: 1_000_000,
@@ -112,7 +105,8 @@ namespace Stratis.Sidechains.Networks
                 genesisFederationMembers: genesisFederationMembers,
                 targetSpacingSeconds: 16,
                 votingEnabled: true,
-                autoKickIdleMembers: true
+                autoKickIdleMembers: true,
+                federationMemberMaxIdleTimeSeconds: 1800
             );
 
             var buriedDeployments = new BuriedDeploymentsArray

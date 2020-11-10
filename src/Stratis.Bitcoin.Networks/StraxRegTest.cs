@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using NBitcoin;
 using NBitcoin.BouncyCastle.Math;
@@ -79,26 +78,11 @@ namespace Stratis.Bitcoin.Networks
             // To successfully process the OP_FEDERATION opcode the federations should be known.
             this.Federations = new Federations();
 
-            // Cirrus federation.
-            var cirrusFederationMnemonics = new[] {
-                "ensure feel swift crucial bridge charge cloud tell hobby twenty people mandate",
-                "quiz sunset vote alley draw turkey hill scrap lumber game differ fiction",
-                "exchange rent bronze pole post hurry oppose drama eternal voice client state"
-               }.Select(m => new Mnemonic(m, Wordlist.English)).ToList();
-
-            // Will replace the last multisig member.
-            var newFederationMemberMnemonics = new string[]
-            {
-                "fat chalk grant major hair possible adjust talent magnet lobster retreat siren"
-            }.Select(m => new Mnemonic(m, Wordlist.English)).ToList();
-
-            // Mimic the code found in CirrusRegTest.
-            var cirrusFederationKeys = cirrusFederationMnemonics.Take(2).Concat(newFederationMemberMnemonics).Select(m => m.DeriveExtKey().PrivateKey).ToList();
-
-            List<PubKey> cirrusFederationPubKeys = cirrusFederationKeys.Select(k => k.PubKey).ToList();
-
-            // Transaction-signing keys!
-            this.Federations.RegisterFederation(new Federation(cirrusFederationPubKeys.ToArray()));
+            // This should mirror the federation registered in CirrusTest.
+            this.Federations.RegisterFederation(new Federation(new[] {
+               new PubKey("03e217933fc748979d7dd67c063d21d517b82fe9bf1184946bc3e078b9237712b2"),//Node1
+               new PubKey("02bea73449db8f7d9b897b637b4bb53561011bb67b2889b40921dd3f68ca2dbe9d"),//Node2
+            }));
 
             this.Consensus = new NBitcoin.Consensus(
                 consensusFactory: consensusFactory,

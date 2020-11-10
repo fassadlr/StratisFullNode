@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "Stratis.CirrusD": {
+      "commandName": "Project",
+      "commandLineArgs": "-agentprefix=side_0 -regtest -addressindex -txindex -datadir=C:\\Stratis\\StraxRegTest\\Data\\side_0 -port=39050 -apiport=39051 -whitebind=127.0.0.1 -addnode=127.0.0.1:39010"
+    }
+  }
+}

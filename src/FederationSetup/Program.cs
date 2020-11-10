@@ -205,7 +205,6 @@ namespace FederationSetup
 
         private static void GeneratePublicPrivateKeys(string passphrase, string keyPath, bool isMultiSigOutput = true)
         {
-            // Generate keys for signing.
             var mnemonicForSigningKey = new Mnemonic(Wordlist.English, WordCount.Twelve);
             PubKey signingPubKey = mnemonicForSigningKey.DeriveExtKey(passphrase).PrivateKey.PubKey;
 
@@ -218,13 +217,13 @@ namespace FederationSetup
             tool.SavePrivateKey(key);
             PubKey miningPubKey = key.PubKey;
 
-            Console.WriteLine($"Your Masternode Public Key: {Encoders.Hex.EncodeData(miningPubKey.ToBytes(false))}");
+            Console.WriteLine($"Your Masternode Mining Public Key: {Encoders.Hex.EncodeData(miningPubKey.ToBytes(false))}");
             Console.WriteLine($"-----------------------------------------------------------------------------");
 
             if (isMultiSigOutput)
             {
                 Console.WriteLine(
-                    $"Your Masternode Signing Key: {Encoders.Hex.EncodeData(signingPubKey.ToBytes(false))}");
+                    $"Your Masternode Transaction Signing Key: {Encoders.Hex.EncodeData(signingPubKey.ToBytes(false))}");
                 Console.WriteLine(Environment.NewLine);
                 Console.WriteLine(
                     $"------------------------------------------------------------------------------------------");
