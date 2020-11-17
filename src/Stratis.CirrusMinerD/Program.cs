@@ -13,6 +13,7 @@ using Stratis.Bitcoin.Features.Consensus;
 using Stratis.Bitcoin.Features.MemoryPool;
 using Stratis.Bitcoin.Features.Miner;
 using Stratis.Bitcoin.Features.Notifications;
+using Stratis.Bitcoin.Features.PoA;
 using Stratis.Bitcoin.Features.RPC;
 using Stratis.Bitcoin.Features.SmartContracts;
 using Stratis.Bitcoin.Features.SmartContracts.PoA;
@@ -34,7 +35,7 @@ namespace Stratis.CirrusMinerD
 
         private static readonly Dictionary<NetworkType, Func<Network>> MainChainNetworks = new Dictionary<NetworkType, Func<Network>>
         {
-            { NetworkType.Mainnet, Networks.Strax.Mainnet},
+            { NetworkType.Mainnet, Networks.Strax.Mainnet },
             { NetworkType.Testnet, Networks.Strax.Testnet },
             { NetworkType.Regtest, Networks.Strax.Regtest }
         };
@@ -73,6 +74,9 @@ namespace Stratis.CirrusMinerD
             {
                 MinProtocolVersion = ProtocolVersion.ALT_PROTOCOL_VERSION
             };
+
+            bool enableFedKicking = nodeSettings.ConfigReader.GetOrDefault("enablefedkicking", true);
+            ((PoAConsensusOptions)nodeSettings.Network.Consensus.Options).AutoKickIdleMembers = enableFedKicking;
 
             IFullNode node = new FullNodeBuilder()
                 .UseNodeSettings(nodeSettings)

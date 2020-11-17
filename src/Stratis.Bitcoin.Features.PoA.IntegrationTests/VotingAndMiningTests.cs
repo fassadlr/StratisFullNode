@@ -18,7 +18,6 @@ using Stratis.Bitcoin.Networks;
 using Stratis.Bitcoin.PoA.Features.Voting;
 using Stratis.Bitcoin.Tests.Common;
 using Stratis.Bitcoin.Utilities.JsonErrors;
-using Stratis.Features.Collateral;
 using Xunit;
 
 namespace Stratis.Bitcoin.Features.PoA.IntegrationTests
@@ -393,7 +392,7 @@ namespace Stratis.Bitcoin.Features.PoA.IntegrationTests
         [Fact]
         public async Task CanMineVotingRequestTransactionAsync()
         {
-            var network = new TestPoACollateralNetwork();
+            var network = new TestPoACollateralNetwork(true, Guid.NewGuid().ToString());
 
             using (PoANodeBuilder builder = PoANodeBuilder.CreatePoANodeBuilder(this))
             {
@@ -427,9 +426,9 @@ namespace Stratis.Bitcoin.Features.PoA.IntegrationTests
                 request.AddSignature(collateralKey.SignMessage(request.SignatureMessage));
 
                 var encoder = new JoinFederationRequestEncoder(nodeA.FullNode.NodeService<Microsoft.Extensions.Logging.ILoggerFactory>());
-                Transaction trx = JoinFederationRequestBuilder.BuildTransaction(nodeA.FullNode.WalletTransactionHandler(), this.network, request, encoder, walletName, walletAccount, walletPassword);
+                JoinFederationRequestResult result = JoinFederationRequestBuilder.BuildTransaction(nodeA.FullNode.WalletTransactionHandler(), this.network, request, encoder, walletName, walletAccount, walletPassword);
 
-                await nodeA.FullNode.NodeController<WalletController>().SendTransaction(new SendTransactionRequest(trx.ToHex()));
+                await nodeA.FullNode.NodeController<WalletController>().SendTransaction(new SendTransactionRequest(result.Transaction.ToHex()));
 
                 TestBase.WaitLoop(() => nodeA.CreateRPCClient().GetRawMempool().Length == 1 && nodeB.CreateRPCClient().GetRawMempool().Length == 1);
 
