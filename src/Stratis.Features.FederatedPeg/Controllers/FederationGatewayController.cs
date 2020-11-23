@@ -70,30 +70,6 @@ namespace Stratis.Features.FederatedPeg.Controllers
         }
 
         /// <summary>
-        /// Retrieves <see cref="CrossChainTransferStatus.FullySigned"/> transactions from the <see cref="ICrossChainTransferStore"/>.
-        /// </summary>
-        /// <returns><see cref="IActionResult"/>OK on success.</returns>
-        /// <response code="200">Returns transfers by status deposits</response>
-        [Route(FederationGatewayRouteEndPoint.RetrieveTransferByStatus)]
-        [HttpGet]
-        [ProducesResponseType((int)HttpStatusCode.OK)]
-        [ProducesResponseType((int)HttpStatusCode.BadRequest)]
-        [ProducesResponseType((int)HttpStatusCode.InternalServerError)]
-        public IActionResult CrossChainTransfers_RetrieveTransactionsByStatus([FromQuery] int transferStatus)
-        {
-            try
-            {
-                ICrossChainTransfer[] result = this.crossChainTransferStore.GetTransfersByStatus(new[] { (CrossChainTransferStatus)transferStatus });
-                return this.Json(result);
-            }
-            catch (Exception e)
-            {
-                this.logger.LogDebug($"Exception {e.Message}.");
-                return ErrorHelpers.BuildErrorResponse(HttpStatusCode.BadRequest, "Error occurred.", e.Message);
-            }
-        }
-
-        /// <summary>
         /// Retrieves blocks deposits.
         /// </summary>
         /// <param name="blockHeight">Last known block height at which to retrieve from.</param>
