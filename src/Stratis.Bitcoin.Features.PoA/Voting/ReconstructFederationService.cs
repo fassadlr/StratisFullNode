@@ -5,6 +5,7 @@ namespace Stratis.Bitcoin.Features.PoA.Voting
 {
     public sealed class ReconstructFederationService
     {
+        private readonly IFullNode fullNode;
         private readonly IFederationManager federationManager;
         private readonly IIdleFederationMembersKicker idleFederationMembersKicker;
         private readonly Logger logger;
@@ -12,11 +13,13 @@ namespace Stratis.Bitcoin.Features.PoA.Voting
         private readonly VotingManager votingManager;
 
         public ReconstructFederationService(
+            IFullNode fullNode,
             IFederationManager federationManager,
             Network network,
             IIdleFederationMembersKicker idleFederationMembersKicker,
             VotingManager votingManager)
         {
+            this.fullNode = fullNode;
             this.federationManager = federationManager;
             this.idleFederationMembersKicker = idleFederationMembersKicker;
             this.votingManager = votingManager;
@@ -32,6 +35,9 @@ namespace Stratis.Bitcoin.Features.PoA.Voting
                 this.logger.Warn("Voting is not enabled on this node.");
                 return;
             }
+
+            // Stop all connectivity
+            this.fullNode.SuspendConnectivity();
 
             // First delete all polls that was started on or after the given height.
             this.logger.Info($"Reconstructing voting data: Cleaning polls after height {height}");
@@ -50,6 +56,9 @@ namespace Stratis.Bitcoin.Features.PoA.Voting
             // Reconstruct polls per block which will rebuild the federation.
             this.logger.Info($"Reconstructing voting data...");
             this.votingManager.ReconstructVotingDataFromHeight(height);
+
+            // Resume all connectivity
+            this.fullNode.ResumeConnectivity();
         }
     }
 }

@@ -80,5 +80,8 @@ namespace Stratis.Bitcoin.Connection
         /// The endpoints the node is listening on for inbound connections.
         /// </summary>
         List<NetworkPeerServer> Servers { get; }
+
+        void Resume();
+        void Suspend();
     }
 }

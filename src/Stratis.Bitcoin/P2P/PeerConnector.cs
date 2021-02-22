@@ -38,6 +38,9 @@ namespace Stratis.Bitcoin.P2P
         /// </para>
         /// </summary>
         void StartConnectAsync();
+
+        void Resume();
+        void Suspend();
     }
 
     /// <summary>
@@ -100,6 +103,8 @@ namespace Stratis.Bitcoin.P2P
 
         /// <summary>Maintains a list of connected peers and ensures their proper disposal.</summary>
         private readonly NetworkPeerDisposer networkPeerDisposer;
+
+        private bool suspended;
 
         /// <summary>Constructor for dependency injection.</summary>
         protected PeerConnector(
@@ -205,6 +210,9 @@ namespace Stratis.Bitcoin.P2P
 
             this.asyncLoop = this.asyncProvider.CreateAndRunAsyncLoop($"{this.GetType().Name}.{nameof(this.ConnectAsync)}", async token =>
             {
+                if (this.suspended)
+                    return;
+
                 if (!this.PeerAddressManager.Peers.Any() || (this.ConnectorPeers.Count >= this.MaxOutboundConnections))
                     return;
 
@@ -212,6 +220,16 @@ namespace Stratis.Bitcoin.P2P
             },
             this.NodeLifetime.ApplicationStopping,
             repeatEvery: this.connectionInterval);
+        }
+
+        public void Resume()
+        {
+            this.suspended = false;
+        }
+
+        public void Suspend()
+        {
+            this.suspended = true;
         }
 
         /// <summary>Attempts to connect to a random peer.</summary>

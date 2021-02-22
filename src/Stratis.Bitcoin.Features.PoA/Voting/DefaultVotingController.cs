@@ -30,6 +30,8 @@ namespace Stratis.Bitcoin.Features.PoA.Voting
 
         private readonly IPollResultExecutor pollExecutor;
 
+        private readonly ReconstructFederationService reconstructFederationService;
+
         protected readonly VotingManager votingManager;
 
         private readonly IWhitelistedHashesRepository whitelistedHashesRepository;
@@ -42,13 +44,15 @@ namespace Stratis.Bitcoin.Features.PoA.Voting
             IWhitelistedHashesRepository whitelistedHashesRepository,
             Network network,
             IPollResultExecutor pollExecutor,
-            IIdleFederationMembersKicker idleFederationMembersKicker)
+            IIdleFederationMembersKicker idleFederationMembersKicker,
+            ReconstructFederationService reconstructFederationService)
         {
             this.chainIndexer = chainIndexer;
             this.federationManager = federationManager;
             this.idleFederationMembersKicker = idleFederationMembersKicker;
             this.network = network;
             this.pollExecutor = pollExecutor;
+            this.reconstructFederationService = reconstructFederationService;
             this.votingManager = votingManager;
             this.whitelistedHashesRepository = whitelistedHashesRepository;
 
@@ -125,7 +129,6 @@ namespace Stratis.Bitcoin.Features.PoA.Voting
                 return ErrorHelpers.BuildErrorResponse(HttpStatusCode.BadRequest, e.Message, e.ToString());
             }
         }
-
 
         /// <summary>
         /// Retrieves a list of active federation members and their last active times.
@@ -290,7 +293,7 @@ namespace Stratis.Bitcoin.Features.PoA.Voting
         [ProducesResponseType((int)HttpStatusCode.OK)]
         [ProducesResponseType((int)HttpStatusCode.BadRequest)]
         [ProducesResponseType((int)HttpStatusCode.InternalServerError)]
-        public IActionResult VoteWhitelistHash([FromBody]HashModel request)
+        public IActionResult VoteWhitelistHash([FromBody] HashModel request)
         {
             return this.VoteWhitelistRemoveHashMember(request, true);
         }
@@ -307,7 +310,7 @@ namespace Stratis.Bitcoin.Features.PoA.Voting
         [ProducesResponseType((int)HttpStatusCode.OK)]
         [ProducesResponseType((int)HttpStatusCode.BadRequest)]
         [ProducesResponseType((int)HttpStatusCode.InternalServerError)]
-        public IActionResult VoteRemoveHash([FromBody]HashModel request)
+        public IActionResult VoteRemoveHash([FromBody] HashModel request)
         {
             return this.VoteWhitelistRemoveHashMember(request, false);
         }
@@ -360,6 +363,31 @@ namespace Stratis.Bitcoin.Features.PoA.Voting
                 IEnumerable<VotingDataModel> models = votes.Select(x => new VotingDataModel(x));
 
                 return this.Json(models);
+            }
+            catch (Exception e)
+            {
+                this.logger.LogError("Exception occurred: {0}", e.ToString());
+                return ErrorHelpers.BuildErrorResponse(HttpStatusCode.BadRequest, e.Message, e.ToString());
+            }
+        }
+
+        /// <summary>
+        /// Reconstructs the federation from a given height.
+        /// </summary>
+        /// <returns>Active federation members</returns>
+        /// <response code="200">Federation reconstruction started.</response>
+        /// <response code="400">Unexpected exception occurred</response>
+        [Route("reconstructfederation")]
+        [HttpPut]
+        [ProducesResponseType((int)HttpStatusCode.OK)]
+        [ProducesResponseType((int)HttpStatusCode.BadRequest)]
+        public IActionResult ReconstructFederation()
+        {
+            try
+            {
+                this.reconstructFederationService.Reconstruct(1_400_000);
+
+                return Json("Reconstruction has started, please view further details in the console or logs.");
             }
             catch (Exception e)
             {

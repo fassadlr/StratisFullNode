@@ -39,6 +39,10 @@ namespace Stratis.Bitcoin
         /// </summary>
         void Start();
 
+        void ResumeConnectivity();
+
+        void SuspendConnectivity();
+
         /// <summary>
         /// Initializes DI services that the node needs.
         /// </summary>

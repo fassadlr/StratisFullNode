@@ -83,6 +83,8 @@ namespace Stratis.Bitcoin
 
         private NodeRunningLock nodeRunningLock;
 
+        private bool suspendLog;
+
         /// <inheritdoc />
         public INodeLifetime NodeLifetime
         {
@@ -240,6 +242,9 @@ namespace Stratis.Bitcoin
         {
             this.periodicLogLoop = this.AsyncProvider.CreateAndRunAsyncLoop("PeriodicLog", (cancellation) =>
             {
+                if (this.suspendLog)
+                    return Task.CompletedTask;
+
                 string stats = this.NodeStats.GetStats();
 
                 this.logger.LogInformation(stats);
@@ -253,6 +258,9 @@ namespace Stratis.Bitcoin
 
             this.periodicBenchmarkLoop = this.AsyncProvider.CreateAndRunAsyncLoop("PeriodicBenchmarkLog", (cancellation) =>
             {
+                if (this.suspendLog)
+                    return Task.CompletedTask;
+
                 if (this.InitialBlockDownloadState.IsInitialBlockDownload())
                 {
                     string benchmark = this.NodeStats.GetBenchmark();
@@ -267,6 +275,18 @@ namespace Stratis.Bitcoin
         }
 
         public string LastLogOutput { get; private set; }
+
+        public void ResumeConnectivity()
+        {
+            this.suspendLog = false;
+            this.ConnectionManager.Resume();
+        }
+
+        public void SuspendConnectivity()
+        {
+            this.suspendLog = true;
+            this.ConnectionManager.Suspend();
+        }
 
         /// <inheritdoc />
         public void Dispose()

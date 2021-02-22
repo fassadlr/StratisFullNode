@@ -24,6 +24,10 @@ namespace Stratis.Bitcoin.P2P
         /// Starts the peer discovery process.
         /// </summary>
         void DiscoverPeers(IConnectionManager connectionManager);
+
+        void Resume();
+
+        void Suspend();
     }
 
     /// <summary>Async loop that discovers new peers to connect to.</summary>
@@ -64,6 +68,8 @@ namespace Stratis.Bitcoin.P2P
 
         private const int TargetAmountOfPeersToDiscover = 2000;
 
+        private bool suspended;
+
         public PeerDiscovery(
             IAsyncProvider asyncProvider,
             ILoggerFactory loggerFactory,
@@ -83,6 +89,16 @@ namespace Stratis.Bitcoin.P2P
             this.nodeSettings = nodeSettings;
         }
 
+        public void Resume()
+        {
+            this.suspended = false;
+        }
+
+        public void Suspend()
+        {
+            this.suspended = true;
+        }
+
         /// <inheritdoc/>
         public void DiscoverPeers(IConnectionManager connectionManager)
         {
@@ -97,6 +113,9 @@ namespace Stratis.Bitcoin.P2P
 
             this.discoverFromDnsSeedsLoop = this.asyncProvider.CreateAndRunAsyncLoop(nameof(this.DiscoverFromDnsSeedsAsync), async token =>
             {
+                if (this.suspended)
+                    return;
+
                 if (this.peerAddressManager.Peers.Count < TargetAmountOfPeersToDiscover)
                     await this.DiscoverFromDnsSeedsAsync();
             },
@@ -105,6 +124,9 @@ namespace Stratis.Bitcoin.P2P
 
             this.discoverFromPeersLoop = this.asyncProvider.CreateAndRunAsyncLoop(nameof(this.DiscoverPeersAsync), async token =>
             {
+                if (this.suspended)
+                    return;
+
                 if (this.peerAddressManager.Peers.Count < TargetAmountOfPeersToDiscover)
                     await this.DiscoverPeersAsync();
             },

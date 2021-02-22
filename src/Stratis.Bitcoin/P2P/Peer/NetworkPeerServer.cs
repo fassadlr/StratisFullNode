@@ -69,6 +69,8 @@ namespace Stratis.Bitcoin.P2P.Peer
         /// <summary>Used to publish application events.</summary>
         private readonly ISignals signals;
 
+        private bool suspended;
+
         /// <summary>
         /// Initializes instance of a network peer server.
         /// </summary>
@@ -121,6 +123,16 @@ namespace Stratis.Bitcoin.P2P.Peer
             this.logger.LogDebug("Network peer server ready to listen on '{0}'.", this.LocalEndpoint);
         }
 
+        public void Resume()
+        {
+            this.suspended = false;
+        }
+
+        public void Suspend()
+        {
+            this.suspended = true;
+        }
+
         /// <summary>
         /// Starts listening on the server's initialized endpoint.
         /// </summary>
@@ -150,6 +162,12 @@ namespace Stratis.Bitcoin.P2P.Peer
             {
                 while (!this.serverCancel.IsCancellationRequested)
                 {
+                    if (this.suspended)
+                    {
+                        await Task.Delay(1000);
+                        continue;
+                    }
+
                     TcpClient tcpClient = await this.tcpListener.AcceptTcpClientAsync().WithCancellationAsync(this.serverCancel.Token).ConfigureAwait(false);
 
                     (bool successful, string reason) = this.AllowClientConnection(tcpClient, networkPeers, iprangeFilteringExclusions);

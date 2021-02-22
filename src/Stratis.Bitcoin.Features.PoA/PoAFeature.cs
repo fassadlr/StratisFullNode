@@ -130,9 +130,9 @@ namespace Stratis.Bitcoin.Features.PoA
             this.federationManager.Initialize();
             this.whitelistedHashesRepository.Initialize();
 
-            var rebuildFederationHeight = this.nodeSettings.ConfigReader.GetOrDefault("rebuildfederationheight", 0);
-            if (rebuildFederationHeight != 0)
-                this.reconstructFederationService.Reconstruct(rebuildFederationHeight);
+            //var rebuildFederationHeight = this.nodeSettings.ConfigReader.GetOrDefault("rebuildfederationheight", 0);
+            //if (rebuildFederationHeight != 0)
+            //    this.reconstructFederationService.Reconstruct(rebuildFederationHeight);
 
             this.miner?.InitializeMining();
 

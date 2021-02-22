@@ -140,6 +140,7 @@ namespace Stratis.Bitcoin.Connection
         public void Initialize(IConsensusManager consensusManager)
         {
             this.consensusManager = consensusManager;
+
             this.AddExternalIpToSelfEndpoints();
 
             if (this.ConnectionSettings.Listen)
@@ -392,27 +393,6 @@ namespace Stratis.Bitcoin.Connection
             }
         }
 
-        private string ToKBSec(ulong bytesPerSec)
-        {
-            double speed = ((double)bytesPerSec / 1024.0);
-            return speed.ToString("0.00") + " KB/S";
-        }
-
-        /// <inheritdoc />
-        public void Dispose()
-        {
-            this.logger.LogInformation("Stopping peer discovery.");
-            this.peerDiscovery?.Dispose();
-
-            foreach (IPeerConnector peerConnector in this.PeerConnectors)
-                peerConnector.Dispose();
-
-            foreach (NetworkPeerServer server in this.Servers)
-                server.Dispose();
-
-            this.networkPeerDisposer.Dispose();
-        }
-
         /// <inheritdoc />
         public void AddConnectedPeer(INetworkPeer peer)
         {
@@ -557,6 +537,47 @@ namespace Stratis.Bitcoin.Connection
             }
 
             return peer;
+        }
+
+        public void Resume()
+        {
+            this.logger.LogInformation("Resuming node connectivity.");
+            this.peerDiscovery?.Resume();
+
+            foreach (IPeerConnector peerConnector in this.PeerConnectors)
+                peerConnector.Resume();
+
+            foreach (NetworkPeerServer server in this.Servers)
+                server.Resume();
+        }
+
+        public void Suspend()
+        {
+            this.logger.LogInformation("Suspending node connectivity.");
+            this.peerDiscovery?.Suspend();
+
+            foreach (IPeerConnector peerConnector in this.PeerConnectors)
+                peerConnector.Suspend();
+
+            foreach (NetworkPeerServer server in this.Servers)
+                server.Suspend();
+
+            this.networkPeerDisposer.Dispose();
+        }
+
+        /// <inheritdoc />
+        public void Dispose()
+        {
+            this.logger.LogInformation("Stopping peer discovery.");
+            this.peerDiscovery?.Dispose();
+
+            foreach (IPeerConnector peerConnector in this.PeerConnectors)
+                peerConnector.Dispose();
+
+            foreach (NetworkPeerServer server in this.Servers)
+                server.Dispose();
+
+            this.networkPeerDisposer.Dispose();
         }
     }
 }
