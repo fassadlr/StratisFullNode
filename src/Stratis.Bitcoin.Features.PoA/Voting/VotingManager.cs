@@ -176,68 +176,6 @@ namespace Stratis.Bitcoin.Features.PoA.Voting
             }
         }
 
-        /// <summary> Remove all polls that started on or after the given height.</summary>
-        /// <param name="height">The height to clean polls from.</param>
-        public void DeletePollsAfterHeight(int height)
-        {
-            this.logger.LogInformation($"Cleaning poll data from height {height}.");
-
-            var idsToRemove = new List<int>();
-
-            this.polls = this.pollsRepository.GetAllPolls();
-
-            foreach (Poll poll in this.polls.Where(p => p.PollStartBlockData.Height >= height))
-            {
-                idsToRemove.Add(poll.Id);
-            }
-
-            if (idsToRemove.Any())
-            {
-                this.pollsRepository.DeletePollsAndSetHighestPollId(idsToRemove.ToArray());
-                this.polls = this.pollsRepository.GetAllPolls();
-            }
-        }
-
-        /// <summary> Reconstructs voting and poll data from a given height.</summary>
-        /// <param name="height">The height to start reconstructing from.</param>
-        public void ReconstructVotingDataFromHeight(int height)
-        {
-            try
-            {
-                this.isBusyReconstructing = true;
-
-                var currentHeight = height;
-                this.logger.LogInformation($"Reconstructing voting poll data from height {currentHeight}.");
-
-                do
-                {
-                    ChainedHeader chainedHeader = this.chainIndexer.GetHeader(currentHeight);
-                    if (chainedHeader == null)
-                        break;
-
-                    Block block = this.blockRepository.GetBlock(chainedHeader.HashBlock);
-                    if (block == null)
-                        break;
-
-                    var chainedHeaderBlock = new ChainedHeaderBlock(block, chainedHeader);
-
-                    this.idleFederationMembersKicker.UpdateFederationMembersLastActiveTime(chainedHeaderBlock, false);
-
-                    OnBlockConnected(new BlockConnected(chainedHeaderBlock));
-
-                    currentHeight++;
-
-                    if (currentHeight % 10000 == 0)
-                        this.logger.LogInformation($"Reconstructing voting data at height {currentHeight}");
-
-                } while (true);
-            }
-            finally
-            {
-                this.isBusyReconstructing = false;
-            }
-        }
-
         /// <summary>Schedules a vote for the next time when the block will be mined.</summary>
         /// <exception cref="InvalidOperationException">Thrown in case caller is not a federation member.</exception>
         public void ScheduleVote(VotingData votingData)

@@ -15,5 +15,13 @@ namespace Stratis.Bitcoin.IntegrationTests.Common.EnvironmentMockUpHelpers
         public void Dispose()
         {
         }
+
+        public void Resume()
+        {
+        }
+
+        public void Suspend()
+        {
+        }
     }
 }

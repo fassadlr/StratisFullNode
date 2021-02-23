@@ -82,6 +82,32 @@ namespace Stratis.Bitcoin.Features.PoA.Voting
             }
         }
 
+
+        /// <summary>
+        /// Reconstructs the federation from a given height.
+        /// </summary>
+        /// <returns>Active federation members</returns>
+        /// <response code="200">Federation reconstruction started.</response>
+        /// <response code="400">Unexpected exception occurred</response>
+        [Route("reconstructfederationnoderunning")]
+        [HttpPut]
+        [ProducesResponseType((int)HttpStatusCode.OK)]
+        [ProducesResponseType((int)HttpStatusCode.BadRequest)]
+        public IActionResult ReconstructFederationNodeRunning()
+        {
+            try
+            {
+                this.reconstructFederationService.Reconstruct();
+
+                return Json("Reconstruction has started, please view further details in the console or logs.");
+            }
+            catch (Exception e)
+            {
+                this.logger.LogError("Exception occurred: {0}", e.ToString());
+                return ErrorHelpers.BuildErrorResponse(HttpStatusCode.BadRequest, e.Message, e.ToString());
+            }
+        }
+
         /// <summary>
         /// Retrieves information for the current federation member's voting status and mining estimates.
         /// </summary>
@@ -386,31 +412,6 @@ namespace Stratis.Bitcoin.Features.PoA.Voting
                 IEnumerable<VotingDataModel> models = votes.Select(x => new VotingDataModel(x));
 
                 return this.Json(models);
-            }
-            catch (Exception e)
-            {
-                this.logger.LogError("Exception occurred: {0}", e.ToString());
-                return ErrorHelpers.BuildErrorResponse(HttpStatusCode.BadRequest, e.Message, e.ToString());
-            }
-        }
-
-        /// <summary>
-        /// Reconstructs the federation from a given height.
-        /// </summary>
-        /// <returns>Active federation members</returns>
-        /// <response code="200">Federation reconstruction started.</response>
-        /// <response code="400">Unexpected exception occurred</response>
-        [Route("reconstructfederation")]
-        [HttpPut]
-        [ProducesResponseType((int)HttpStatusCode.OK)]
-        [ProducesResponseType((int)HttpStatusCode.BadRequest)]
-        public IActionResult ReconstructFederation()
-        {
-            try
-            {
-                this.reconstructFederationService.Reconstruct(1_400_000);
-
-                return Json("Reconstruction has started, please view further details in the console or logs.");
             }
             catch (Exception e)
             {
