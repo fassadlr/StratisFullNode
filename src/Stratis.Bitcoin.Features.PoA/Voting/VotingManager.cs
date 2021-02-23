@@ -11,6 +11,7 @@ using Stratis.Bitcoin.Consensus;
 using Stratis.Bitcoin.EventBus;
 using Stratis.Bitcoin.EventBus.CoreEvents;
 using Stratis.Bitcoin.Features.BlockStore;
+using Stratis.Bitcoin.Features.PoA.Events;
 using Stratis.Bitcoin.Primitives;
 using Stratis.Bitcoin.Signals;
 using Stratis.Bitcoin.Utilities;
@@ -106,6 +107,73 @@ namespace Stratis.Bitcoin.Features.PoA.Voting
             this.isInitialized = true;
 
             this.logger.LogDebug("VotingManager initialized.");
+        }
+
+        /// <summary> Remove all polls that started on or after the given height.</summary>
+        /// <param name="height">The height to clean polls from.</param>
+        public void DeletePollsAfterHeight(int height)
+        {
+            this.logger.LogInformation($"Cleaning poll data from height {height}.");
+
+            var idsToRemove = new List<int>();
+
+            this.polls = this.pollsRepository.GetAllPolls();
+
+            foreach (Poll poll in this.polls.Where(p => p.PollStartBlockData.Height >= height))
+            {
+                idsToRemove.Add(poll.Id);
+            }
+
+            if (idsToRemove.Any())
+            {
+                this.pollsRepository.DeletePollsAndSetHighestPollId(idsToRemove.ToArray());
+                this.polls = this.pollsRepository.GetAllPolls();
+            }
+        }
+
+        /// <summary> Reconstructs voting and poll data from a given height.</summary>
+        /// <param name="height">The height to start reconstructing from.</param>
+        public void ReconstructVotingDataFromHeightLocked(int height)
+        {
+            try
+            {
+                this.isBusyReconstructing = true;
+
+                var currentHeight = height;
+                var progress = $"Reconstructing voting poll data from height {currentHeight}.";
+                this.logger.LogInformation(progress);
+                this.signals.Publish(new RecontructFederationProgressEvent() { Progress = progress });
+
+                do
+                {
+                    ChainedHeader chainedHeader = this.chainIndexer.GetHeader(currentHeight);
+                    if (chainedHeader == null)
+                        break;
+
+                    Block block = this.blockRepository.GetBlock(chainedHeader.HashBlock);
+                    if (block == null)
+                        break;
+
+                    var chainedHeaderBlock = new ChainedHeaderBlock(block, chainedHeader);
+
+                    this.idleFederationMembersKicker.UpdateFederationMembersLastActiveTime(chainedHeaderBlock, false);
+
+                    OnBlockConnected(new BlockConnected(chainedHeaderBlock));
+
+                    currentHeight++;
+
+                    if (currentHeight % 10000 == 0)
+                    {
+                        progress = $"Reconstructing voting data at height {currentHeight}";
+                        this.logger.LogInformation(progress);
+                        this.signals.Publish(new RecontructFederationProgressEvent() { Progress = progress });
+                    }
+                } while (true);
+            }
+            finally
+            {
+                this.isBusyReconstructing = false;
+            }
         }
 
         /// <summary> Remove all polls that started on or after the given height.</summary>

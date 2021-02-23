@@ -60,6 +60,29 @@ namespace Stratis.Bitcoin.Features.PoA.Voting
         }
 
         /// <summary>
+        /// Signals the node to rebuild the federation via cleabning and rebuilding executed polls.
+        /// This will be done via writing a flag to the .conf file so that on startup it be executed.
+        /// </summary>
+        [Route("reconstructfederation")]
+        [HttpPut]
+        [ProducesResponseType((int)HttpStatusCode.OK)]
+        [ProducesResponseType((int)HttpStatusCode.BadRequest)]
+        public IActionResult ReconstructFederation()
+        {
+            try
+            {
+                this.reconstructFederationService.SetReconstructionFlag(true);
+
+                return Json("Reconstruction flag set, please restart the node.");
+            }
+            catch (Exception e)
+            {
+                this.logger.LogError("Exception occurred: {0}", e.ToString());
+                return ErrorHelpers.BuildErrorResponse(HttpStatusCode.BadRequest, e.Message, e.ToString());
+            }
+        }
+
+        /// <summary>
         /// Retrieves information for the current federation member's voting status and mining estimates.
         /// </summary>
         /// <returns>Active federation members</returns>
