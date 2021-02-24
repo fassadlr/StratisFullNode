@@ -1,6 +1,4 @@
 ﻿using System;
-using System.IO;
-using System.Linq;
 using NBitcoin;
 using NLog;
 using Stratis.Bitcoin.Configuration;
@@ -100,27 +98,27 @@ namespace Stratis.Bitcoin.Features.PoA.Voting
             }
         }
 
-        public void SetReconstructionFlag(bool reconstructOnStartup)
-        {
-            string[] configLines = File.ReadAllLines(this.nodeSettings.ConfigurationFile);
+        //public void SetReconstructionFlag(bool reconstructOnStartup)
+        //{
+        //    string[] configLines = File.ReadAllLines(this.nodeSettings.ConfigurationFile);
 
-            if (configLines.Any(c => c.Contains(PoAFeature.ReconstructFederationFlag)))
-            {
-                for (int i = 0; i < configLines.Length; i++)
-                {
-                    if (configLines[i].Contains(PoAFeature.ReconstructFederationFlag))
-                        configLines[i] = $"{PoAFeature.ReconstructFederationFlag}={reconstructOnStartup}";
-                }
+        //    if (configLines.Any(c => c.Contains(PoAFeature.ReconstructFederationFlag)))
+        //    {
+        //        for (int i = 0; i < configLines.Length; i++)
+        //        {
+        //            if (configLines[i].Contains(PoAFeature.ReconstructFederationFlag))
+        //                configLines[i] = $"{PoAFeature.ReconstructFederationFlag}={reconstructOnStartup}";
+        //        }
 
-                File.WriteAllLines(this.nodeSettings.ConfigurationFile, configLines);
-            }
-            else
-            {
-                using (StreamWriter sw = File.AppendText(this.nodeSettings.ConfigurationFile))
-                {
-                    sw.WriteLine($"{PoAFeature.ReconstructFederationFlag}={reconstructOnStartup}");
-                };
-            }
-        }
+        //        File.WriteAllLines(this.nodeSettings.ConfigurationFile, configLines);
+        //    }
+        //    else
+        //    {
+        //        using (StreamWriter sw = File.AppendText(this.nodeSettings.ConfigurationFile))
+        //        {
+        //            sw.WriteLine($"{PoAFeature.ReconstructFederationFlag}={reconstructOnStartup}");
+        //        };
+        //    }
+        //}
     }
 }

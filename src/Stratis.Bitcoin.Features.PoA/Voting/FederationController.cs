@@ -65,6 +65,31 @@ namespace Stratis.Bitcoin.Features.PoA.Voting
         }
 
         /// <summary>
+        /// Reconstructs the federation from a given height.
+        /// </summary>
+        /// <returns>Active federation members</returns>
+        /// <response code="200">Federation reconstruction started.</response>
+        /// <response code="400">Unexpected exception occurred</response>
+        [Route("reconstructfederationnoderunning")]
+        [HttpPut]
+        [ProducesResponseType((int)HttpStatusCode.OK)]
+        [ProducesResponseType((int)HttpStatusCode.BadRequest)]
+        public IActionResult ReconstructFederationNodeRunning()
+        {
+            try
+            {
+                this.reconstructFederationService.Reconstruct();
+
+                return Json("Reconstruction has started, please view further details in the console or logs.");
+            }
+            catch (Exception e)
+            {
+                this.logger.Error("Exception occurred: {0}", e.ToString());
+                return ErrorHelpers.BuildErrorResponse(HttpStatusCode.BadRequest, e.Message, e.ToString());
+            }
+        }
+
+        /// <summary>
         /// Retrieves information for the current federation member's voting status and mining estimates.
         /// </summary>
         /// <returns>Active federation members</returns>
